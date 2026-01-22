@@ -13,9 +13,34 @@ Uma aplicação PHP divertida que fornece conselhos aleatórios, fatos curiosos 
 - **Rate Limiting**: Proteção contra abuso com middleware de limite de requisições
 - **Docker**: Pronto para containerização
 
-## 📋 Pré-requisitos
+## � Começar Rápido
 
-- PHP 7.4+
+### Localmente
+
+```bash
+# Instalar dependências
+composer install
+
+# Executar testes
+composer test
+
+# Verificar sintaxe PHP
+composer lint
+
+# Iniciar servidor de desenvolvimento
+php -S 0.0.0.0:8000 -t public
+```
+
+### Com Docker
+
+```bash
+docker build -f docker/Dockerfile -t coisas-inuteis .
+docker run -p 8000:8080 coisas-inuteis
+```
+
+## �📋 Pré-requisitos
+
+- PHP 8.2+
 - Composer
 - Docker (opcional)
 
@@ -70,24 +95,46 @@ Execute os testes com PHPUnit:
 
 ## 📝 Uso da API
 
+### Endpoint Raiz
+```
+GET /
+```
+Retorna informação sobre os endpoints disponíveis.
+
 ### Obter um conselho aleatório
 ```
-GET /advice
+GET /conselho
 ```
+Resposta: `{"conselho": "Nunca confie em um pato com chapéu."}`
 
 ### Obter um fato curioso
 ```
-GET /fact
+GET /fato
 ```
+Resposta: `{"fato": "O primeiro fax enviado continha uma piada ruim..."}`
 
-### Obter informação de um número
+### Obter um número aleatório
 ```
-GET /number/{id}
+GET /numero
 ```
+Resposta: `{"numero": 42}`
 
-## 🛡️ Rate Limiting
+### Contribuir com novo item
+```
+POST /contribuir
+Content-Type: application/json
 
-A aplicação implementa um middleware de limite de requisições para proteção contra abuso. Configure os limites no arquivo `.env`.
+{
+  "type": "conselho",
+  "value": "Seu novo conselho inútil"
+}
+```
+Tipos aceitos: `conselho`, `fato`, `numero`
+
+#### Rate Limiting
+O endpoint `POST /contribuir` possui limite de requisições:
+- **Máximo**: 10 requisições por minuto (por IP)
+- **Header de resposta**: `Retry-After` (segundos até próxima tentativa)
 
 ## 📚 Dependências Principais
 

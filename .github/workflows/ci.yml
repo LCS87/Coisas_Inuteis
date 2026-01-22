@@ -20,5 +20,8 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
 
+      - name: Run linter
+        run: composer run-script lint || true
+
       - name: Run tests
         run: vendor/bin/phpunit

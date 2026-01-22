@@ -2,9 +2,10 @@ FROM php:8.2-cli-alpine
 
 WORKDIR /app
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Instalar Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-COPY composer.json phpunit.xml ./
+COPY composer.json composer.lock* phpunit.xml ./
 RUN composer install --no-interaction --no-progress --prefer-dist --no-dev
 
 COPY app ./app

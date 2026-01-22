@@ -18,7 +18,11 @@ final class RateLimitMiddleware implements MiddlewareInterface
         private readonly int $maxRequests,
         private readonly int $windowSeconds
     ) {
-        $this->storePath = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'coisas_inuteis_rate_limit.json';
+        $cacheDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'coisas_inuteis_cache';
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0700, true);
+        }
+        $this->storePath = $cacheDir . DIRECTORY_SEPARATOR . 'rate_limit.json';
     }
 
     public function process(Request $request, Handler $handler): Response
