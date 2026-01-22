@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Coisas Inúteis</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #0b1020;
+      --panel: #111a33;
+      --text: #eef2ff;
+      --muted: #b7c0ff;
+      --btn: #2a3cff;
+      --btn2: #16a34a;
+      --btn3: #f97316;
+      --border: rgba(255,255,255,0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      background: radial-gradient(1200px 800px at 20% 10%, #1a2a66 0%, transparent 55%),
+                  radial-gradient(1200px 800px at 90% 30%, #0f3d2e 0%, transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 28px 16px;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+    }
+
+    header {
+      padding: 18px 18px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border-radius: 14px;
+      backdrop-filter: blur(8px);
+    }
+
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 22px;
+      letter-spacing: 0.2px;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    @media (min-width: 760px) {
+      .grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 190px;
+    }
+
+    .title {
+      font-size: 14px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.06s ease, filter 0.12s ease;
+    }
+
+    button:active { transform: translateY(1px); }
+    button[disabled] { cursor: not-allowed; opacity: 0.75; }
+
+    #btn-fato { background: var(--btn); }
+    #btn-numero { background: var(--btn2); }
+    #btn-conselho { background: var(--btn3); }
+
+    .result {
+      flex: 1;
+      border: 1px dashed rgba(255,255,255,0.18);
+      border-radius: 12px;
+      padding: 10px;
+      color: #e7eaff;
+      background: rgba(0,0,0,0.15);
+      white-space: pre-wrap;
+      line-height: 1.35;
+      font-size: 14px;
+    }
+
+    .hint {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    code {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.10);
+      padding: 1px 6px;
+      border-radius: 8px;
+      color: #e7eaff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Coisas Inúteis</h1>
+      <p class="sub">Clique nos botões para consultar a API. Cada resposta aparece logo abaixo do respectivo botão.</p>
+      <p class="hint">Servidor dev: <code>http://127.0.0.1:8081</code> (ou a porta que você estiver usando).</p>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <p class="title">Fato irrelevante</p>
+        <button id="btn-fato" type="button">Buscar fato</button>
+        <div id="out-fato" class="result">(sem resposta ainda)</div>
+      </section>
+
+      <section class="card">
+        <p class="title">Número inútil</p>
+        <button id="btn-numero" type="button">Buscar número</button>
+        <div id="out-numero" class="result">(sem resposta ainda)</div>
+      </section>
+
+      <section class="card">
+        <p class="title">Conselho absurdo</p>
+        <button id="btn-conselho" type="button">Buscar conselho</button>
+        <div id="out-conselho" class="result">(sem resposta ainda)</div>
+      </section>
+    </main>
+
+    <p class="hint">Dica: se você abrir este arquivo direto (sem servidor), o navegador pode bloquear requests. Use o servidor do PHP.</p>
+  </div>
+
+  <script>
+    async function fetchJson(path) {
+      const res = await fetch(path, { headers: { 'Accept': 'application/json' } });
+      const text = await res.text();
+
+      let data = null;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error('Resposta não é JSON: ' + text.slice(0, 200));
+      }
+
+      if (!res.ok) {
+        throw new Error((data && (data.erro || data.mensagem)) ? (data.erro || data.mensagem) : ('HTTP ' + res.status));
+      }
+
+      return data;
+    }
+
+    function setLoading(btn, out, loading) {
+      btn.disabled = loading;
+      if (loading) {
+        out.textContent = 'Carregando...';
+      }
+    }
+
+    function wire(buttonId, outputId, endpoint, key) {
+      const btn = document.getElementById(buttonId);
+      const out = document.getElementById(outputId);
+
+      btn.addEventListener('click', async () => {
+        try {
+          setLoading(btn, out, true);
+          const data = await fetchJson(endpoint);
+          out.textContent = data && data[key] !== undefined ? String(data[key]) : JSON.stringify(data);
+        } catch (e) {
+          out.textContent = 'Erro: ' + (e && e.message ? e.message : String(e));
+        } finally {
+          setLoading(btn, out, false);
+        }
+      });
+    }
+
+    wire('btn-fato', 'out-fato', '/fato', 'fato');
+    wire('btn-numero', 'out-numero', '/numero', 'numero');
+    wire('btn-conselho', 'out-conselho', '/conselho', 'conselho');
+  </script>
+</body>
+</html>
